@@ -8,7 +8,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @SpringBootApplication
 @EnableTransactionManagement
-@EnableJpaRepositories(basePackages = "ru.kata.spring.boot_security.demo")
 @EntityScan(basePackages = "ru.kata.spring.boot_security.demo.model")
 public class SpringBootSecurityDemoApplication {
 
