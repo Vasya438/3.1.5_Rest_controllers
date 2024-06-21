@@ -1,49 +1,77 @@
 package ru.kata.spring.boot_security.demo.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.ModelAndView;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.annotation.*;
 import ru.kata.spring.boot_security.demo.model.Role;
 import ru.kata.spring.boot_security.demo.model.User;
 import ru.kata.spring.boot_security.demo.service.RoleService;
+import ru.kata.spring.boot_security.demo.service.RoleServiceImpl;
 import ru.kata.spring.boot_security.demo.service.UserService;
+import ru.kata.spring.boot_security.demo.service.UserServiceImpl;
 
+import javax.validation.Valid;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
-@RequestMapping(value = "/admin")
+@RequestMapping("/admin")
 public class AdminController {
 
-    private final RoleService roleService;
     private final UserService userService;
+    private final RoleService roleService;
 
     @Autowired
-    public AdminController(RoleService roleService, UserService userService) {
-        this.roleService = roleService;
+    public AdminController(UserService userService, RoleService roleService) {
         this.userService = userService;
-
+        this.roleService = roleService;
     }
 
-    @GetMapping("/list")
-    public ModelAndView allUsers() {
-        ModelAndView modelAndView = new ModelAndView();
-        modelAndView.setViewName("adminPageRest");
-
-        List<User> users = userService.getAllUsersList();
-        List<Role> roleList = roleService.getListRoles();
-        modelAndView.addObject("userList", users);
-        modelAndView.addObject("roleList", roleList);
-
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        Optional<User> user = userService.findByUserName(auth.getName());
-        modelAndView.addObject("userCurrent", user.get());
-
-        return modelAndView;
+    @GetMapping("/all")
+    public List<User> getPeople() {
+        return userService.getAllUsersList();
     }
 
+    @GetMapping("/roles")
+    public ResponseEntity<List<Role>> getRoles() {
+        List<Role> roles = roleService.getListRoles();
+        return !roles.isEmpty()
+                ? new ResponseEntity<>(roles, HttpStatus.OK)
+                : new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+
+    @GetMapping("/{id}")
+    public User getUser(@PathVariable("id") long id) {
+        return userService.getUserById(id);
+    }
+
+    @PostMapping
+    public ResponseEntity<User> create(@RequestBody @Valid User user, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            StringBuilder errorMsg = new StringBuilder();
+            List<FieldError> errors = bindingResult.getFieldErrors();
+            for (FieldError error : errors) {
+                errorMsg.append(error.getField())
+                        .append(" - ")
+                        .append(error.getDefaultMessage())
+                        .append(";");
+            }
+        }
+        userService.addUser(user);
+        return new ResponseEntity<>(user, HttpStatus.CREATED);
+    }
+
+    @PutMapping
+    public User update(@RequestBody @Valid User user) {
+        userService.addUser(user);
+        return user;
+    }
+
+    @DeleteMapping("/{id}")
+    public String delete(@PathVariable("id") long id) {
+        userService.deleteUser(id);
+        return "User with ID = " + id + " was deleted";
+    }
 }

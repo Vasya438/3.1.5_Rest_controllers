@@ -10,8 +10,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @EnableWebMvc
 public class MvcConfig implements WebMvcConfigurer {
     public void addViewControllers(ViewControllerRegistry registry) {
-        registry.addViewController("/user").setViewName("userPageRest");
-        registry.addViewController("/admin/users").setViewName("adminPageRest");
+        registry.addViewController("/user").setViewName("user");
+        registry.addViewController("/admin/users").setViewName("admin");
     }
 
     @Override
